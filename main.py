@@ -11,7 +11,7 @@ import koneksi, get_attributes, get_params
 vehicle = koneksi.vehicle
 
 def armMotor():
-    
+
     # Get Vehicle Home location - will be `None` until first set by autopilot
     print("Getting Home Location...")
     while not vehicle.home_location:
@@ -42,7 +42,7 @@ def armMotor():
 
     print("Ready to Fly!")
 
-def take_off(target_altitude=10):
+def takeOff(target_altitude=10):
     print("Taking off!")
     vehicle.simple_takeoff(target_altitude)  # Take off to target altitude
 
@@ -62,7 +62,6 @@ def getJarak(lokasi_terkini, lokasi_target):
     dlong = lokasi_terkini.lon - lokasi_target.lon
     return math.sqrt((dlat*dlat) + (dlong*dlong)) * 1.113195e5
 
-
 def terbangKe(lokasi_target):
     print("Menuju : ", lokasi_target)
     lokasi_terkini = vehicle.location.global_relative_frame
@@ -77,31 +76,25 @@ def terbangKe(lokasi_target):
             break
         time.sleep(1)
 
+def RTL():
+    vehicle.mode = VehicleMode('RTL')
+    while vehicle.armed:
+        print()
+        print("  OTW RTL...", getJarak(vehicle.location.global_relative_frame,vehicle.home_location) ," meter lagi...")
+        time.sleep(1)
+    print("RTL Selesai!")
+
 ################################################# Manggil FUNGSI DI SINI SEMUA YGY (biar rapih)
-
-# get_params.getParams(vehicle)
-# get_attributes.getAttributes(vehicle)
-
-# armMotor()
-# take_off(10)
-# time.sleep(5)
-# vehicle.armed = False
-# time.sleep(5)
-# get_attributes.getAttributes(vehicle)
-
-# print("Simpel go to. . .")
-# Set the target location in global-relative frame
-# lokasi_tujuan = LocationGlobalRelative(-7.077524, 110.328864, 10) #Latitude, Longitude, Altitude
-# vehicle.simple_goto(lokasi_tujuan)
-
-# vehicle.mode = VehicleMode('RTL')
-# vehicle.mode = VehicleMode('LAND')
 
 lokasi_target1 = LocationGlobalRelative(-7.077743, 110.328161, 10)
 lokasi_target2 = LocationGlobalRelative(-7.0774391, 110.3289168, 10)
 
+get_params.getParams(vehicle)
+get_attributes.getAttributes(vehicle)
+
 armMotor()
-take_off(10)
+takeOff(10)
 terbangKe(lokasi_target1)
 terbangKe(lokasi_target2)
-vehicle.mode = VehicleMode('RTL')
+RTL()
+vehicle.mode = VehicleMode('STABILIZE')
