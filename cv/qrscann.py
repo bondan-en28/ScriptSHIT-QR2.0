@@ -9,7 +9,7 @@ def read_barcodes(frame):
         #1
         barcode_info = barcode.data.decode('utf-8')
         cv2.rectangle(frame, (x, y),(x+w, y+h), (0, 255, 0), 2)
-        
+
         #2
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, barcode_info, (x + 6, y - 6), font, 2.0, (255, 255, 255), 1)
@@ -20,7 +20,10 @@ def read_barcodes(frame):
 
 def main():
     #1
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 180)
+
     ret, frame = camera.read()
     #2
     while ret:

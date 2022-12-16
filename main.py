@@ -4,9 +4,11 @@ import math
 
 # Dronekit Import
 from dronekit import VehicleMode, LocationGlobalRelative
+from pymavlink import mavutil # Needed for command message definitions
 
 # Local Import
 import koneksi, get_attributes, get_params
+from cv import qrs
 
 vehicle = koneksi.vehicle
 
@@ -76,6 +78,101 @@ def terbangKe(lokasi_target):
             break
         time.sleep(1)
 
+def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
+                                                            # # Set up velocity mappings
+                                                            # # velocity_x > 0 => fly North
+                                                            # # velocity_x < 0 => fly South
+                                                            # # velocity_y > 0 => fly East
+                                                            # # velocity_y < 0 => fly West
+                                                            # # velocity_z < 0 => ascend
+                                                            # # velocity_z > 0 => descend
+
+    msg = vehicle.message_factory.set_position_target_local_ned_encode(
+        0,       # time_boot_ms (not used)
+        0, 0,    # target system, target component
+        mavutil.mavlink.MAV_FRAME_LOCAL_NED, # frame
+        0b0000111111000111, # type_mask (only speeds enabled)
+        0, 0, 0, # x, y, z positions (not used)
+        velocity_x, velocity_y, velocity_z, # x, y, z velocity in m/s
+        0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
+        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+
+
+    # send command to vehicle on 1 Hz cycle
+    for x in range(0,duration):
+        vehicle.send_mavlink(msg)
+        time.sleep(1)
+
+def condition_yaw(heading, relative=False):
+    if relative:
+        is_relative=1 #yaw relative to direction of travel
+    else:
+        is_relative=0 #yaw is an absolute angle
+    # create the CONDITION_YAW command using command_long_encode()
+    msg = vehicle.message_factory.command_long_encode(
+        0, 0,    # target system, target component
+        mavutil.mavlink.MAV_CMD_CONDITION_YAW, #command
+        0, #confirmation
+        heading,    # param 1, yaw in degrees
+        0,          # param 2, yaw speed deg/s
+        1,          # param 3, direction -1 ccw, 1 cw
+        is_relative, # param 4, relative offset 1, absolute angle 0
+        0, 0, 0)    # param 5 ~ 7 not used
+    # send command to vehicle
+    vehicle.send_mavlink(msg)
+
+def set_roi(location):
+    """
+    Send MAV_CMD_DO_SET_ROI message to point camera gimbal at a 
+    specified region of interest (LocationGlobal).
+    The vehicle may also turn to face the ROI.
+
+    For more information see: 
+    http://copter.ardupilot.com/common-mavlink-mission-command-messages-mav_cmd/#mav_cmd_do_set_roi
+    """
+    # create the MAV_CMD_DO_SET_ROI command
+    msg = vehicle.message_factory.command_long_encode(
+        0, 0,    # target system, target component
+        mavutil.mavlink.MAV_CMD_DO_SET_ROI, #command
+        0, #confirmation
+        0, 0, 0, 0, #params 1-4
+        location.lat,
+        location.lon,
+        location.alt
+        )
+    # send command to vehicle
+    vehicle.send_mavlink(msg)
+
+def geser(arah):
+    vehicle.channels.overrides['3'] = 1500
+    vehicle.mode = VehicleMode('LOITER')
+
+    time.sleep(1)
+    print("Mode: "+vehicle.mode.name)
+    print("Emulating Joystick Control...")
+    
+    vehicle.channels.overrides['3'] = 1500
+    if arah == 'kanan':
+        vehicle.channels.overrides['1']=vehicle.channels['1']+100
+    if arah == 'kiri':
+        vehicle.channels.overrides['1']=vehicle.channels['1']-100
+    if arah == 'maju':
+        vehicle.channels.overrides['2']=vehicle.channels['2']+100
+    if arah == 'mundur':
+        vehicle.channels.overrides['2']=vehicle.channels['2']-100
+
+    time.sleep(1)
+    # # vehicle.channels.overrides = {'3': 1500, '2': 1700}
+    # print(" Ch1: %s" % vehicle.channels['1'])
+    # print(" Ch2: %s" % vehicle.channels['2'])
+    # print(" Ch3: %s" % vehicle.channels['3'])
+    # print(" Ch4: %s" % vehicle.channels['4'])
+    # print("Number of channels: %s" % len(vehicle.channels))
+    # time.sleep(1)
+
+    vehicle.channels.overrides = {}
+    vehicle.mode = VehicleMode('GUIDED')
+    
 def RTL():
     vehicle.mode = VehicleMode('RTL')
     while vehicle.armed:
@@ -84,17 +181,47 @@ def RTL():
         time.sleep(1)
     print("RTL Selesai!")
 
+    
 ################################################# Manggil FUNGSI DI SINI SEMUA YGY (biar rapih)
 
 lokasi_target1 = LocationGlobalRelative(-7.077743, 110.328161, 10)
 lokasi_target2 = LocationGlobalRelative(-7.0774391, 110.3289168, 10)
-
-get_params.getParams(vehicle)
-get_attributes.getAttributes(vehicle)
+lokasi_target3 = LocationGlobalRelative(-7.069108, 110.366521, 100)
+# get_params.getParams(vehicle)
+# get_attributes.getAttributes(vehicle)
 
 armMotor()
 takeOff(10)
 terbangKe(lokasi_target1)
-terbangKe(lokasi_target2)
+# terbangKe(lokasi_target2)
+# terbangKe(lokasi_target3)
+
+qrs.init(vehicle, "Bondan Eka Nugraha")
+
+# geser('kanan')
+# geser('kanan')
+# geser('kanan')
+
+# time.sleep(1000)
+# set_roi(vehicle.location.global_relative_frame)
+# geser(1,0,0,10)
+# geser(0,1,0,10)
+
+
+# terbangKe(lokasi_target2)
+
+# Sequence:
+# 1. Scan QR-Code
+# 2. Verifying QR-Code
+# 3. Aligning QR-Code
+# 4. Secondary Verifying QR-Code
+# 5. IF VERIFIED>Decent Altitude
+# 6. ELSE>RTL
+# 7. RTL
+
+# qr_sign = "Bondan Eka Nugraha"
+# verified = qr_scanner.scanQR(qr_sign)
+
+# print(verified)
 RTL()
 vehicle.mode = VehicleMode('STABILIZE')
