@@ -1,15 +1,14 @@
 from __future__ import print_function
-import time
-import math
-
+import time, math, threading
 # Dronekit Import
 from dronekit import VehicleMode, LocationGlobalRelative
 from pymavlink import mavutil # Needed for command message definitions
 
 # Local Import
 import koneksi, get_attributes, get_params
-from cv import qrs
+from cv import qrs, qr_target_identifier
 
+verified = qrs.verified
 vehicle = koneksi.vehicle
 
 def armMotor():
@@ -176,27 +175,124 @@ def geser(arah):
 def RTL():
     vehicle.mode = VehicleMode('RTL')
     while vehicle.armed:
-        print()
-        print("  OTW RTL...", getJarak(vehicle.location.global_relative_frame,vehicle.home_location) ," meter lagi...")
+        jarak = getJarak(vehicle.location.global_relative_frame,vehicle.home_location)
+        if jarak<1:
+            print("Descending..."+str(vehicle.location.global_relative_frame.alt))
+        else:
+            print("  OTW RTL...", jarak ," meter lagi...")
         time.sleep(1)
     print("RTL Selesai!")
 
-    
+def align(stop):
+    try:
+        print("Mode: "+vehicle.mode.name)
+        mission_passed = False
+        vehicle.channels.overrides['3'] = 1500
+        vehicle.mode = VehicleMode('LOITER')
+        print("Ubah mode ke LOITER")
+        time.sleep(1)
+        print("Mode: "+vehicle.mode.name)
+        print("Emulating Joystick Control...")
+        while mission_passed is False:
+            while verified.x and verified.y:
+                x, y=verified.x , verified.y
+                print(str(x)+','+str(y))
+                if x<50 and x>-50 and y<50 and y>-50:
+                    vehicle.channels.overrides = {}
+                    mission_passed = True
+                    print("Mission Passed!")
+                    break
+                elif x>50: #kiri
+                    vehicle.channels.overrides['1']=1300
+                    print('kiri')
+                elif x<-50: #kanan
+                    vehicle.channels.overrides['1']=1700
+                    print('kanan')
+                elif y>50: #mundur
+                    vehicle.channels.overrides['2']=1300
+                    print('mundur')
+                elif y<-50: #maju
+                    vehicle.channels.overrides['2']=1700            
+                    print('maju')
+                time.sleep(1)
+            else:
+                print("Looking for QRCode...")
+                vehicle.channels.overrides = {}
+                vehicle.channels.overrides['3'] = 1500
+                time.sleep(1)
+    except:
+        vehicle.channels.overrides = {}
+
 ################################################# Manggil FUNGSI DI SINI SEMUA YGY (biar rapih)
 
-lokasi_target1 = LocationGlobalRelative(-7.077743, 110.328161, 10)
-lokasi_target2 = LocationGlobalRelative(-7.0774391, 110.3289168, 10)
-lokasi_target3 = LocationGlobalRelative(-7.069108, 110.366521, 100)
+print("Verifikasi Misi...")
+identifiedQRDict = qr_target_identifier.main()
+targetLocation = LocationGlobalRelative(float(identifiedQRDict['lat']), float(identifiedQRDict['lon']), 10)
+
+print("\nTarget Location: "+str(targetLocation))
+print("Distance to Target: "+str(getJarak(vehicle.location.global_relative_frame,targetLocation)))
+
+if input("\n\nArm Motors? y/n: ")=="y":
+    armMotor()
+    if input("\nTerbang? y/n: ")=="y":
+        takeOff(10)
+        terbangKe(targetLocation)
+        stopAlignment = False
+        vehicleAlignment = threading.Thread(target=align, args =(lambda : stopAlignment, )) #Threading agar fungsi align dapat berjalan di latar belakang
+        vehicleAlignment.daemon = True
+        vehicleAlignment.start()
+        qrs.init(vehicle, str(identifiedQRDict['id']))
+        stopAlignment = True
+        vehicleAlignment.join()        
+        RTL()
+    else:
+        vehicle.armed = False
+        print("Mission Cancelled.")
+else:
+    print("Mission Cancelled.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# lokasi_target1 = LocationGlobalRelative(-7.077743, 110.328161, 10)
+# lokasi_target2 = LocationGlobalRelative(-7.0774391, 110.3289168, 10)
+# lokasi_target3 = LocationGlobalRelative(-7.069108, 110.366521, 100)
 # get_params.getParams(vehicle)
 # get_attributes.getAttributes(vehicle)
 
-armMotor()
-takeOff(10)
-terbangKe(lokasi_target1)
+
+# armMotor()
+# takeOff(10)
+# terbangKe(lokasi_target1)
 # terbangKe(lokasi_target2)
 # terbangKe(lokasi_target3)
 
-qrs.init(vehicle, "Bondan Eka Nugraha")
+#qrs.init(vehicle, "GSA")
 
 # geser('kanan')
 # geser('kanan')
@@ -223,5 +319,5 @@ qrs.init(vehicle, "Bondan Eka Nugraha")
 # verified = qr_scanner.scanQR(qr_sign)
 
 # print(verified)
-RTL()
-vehicle.mode = VehicleMode('STABILIZE')
+# RTL()
+# vehicle.mode = VehicleMode('STABILIZE')

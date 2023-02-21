@@ -1,6 +1,8 @@
 #import libraries
 import cv2
 from pyzbar import pyzbar
+from ast import literal_eval
+
 
 def read_barcodes(frame):
     barcodes = pyzbar.decode(frame)
@@ -10,9 +12,23 @@ def read_barcodes(frame):
         barcode_info = barcode.data.decode('utf-8')
         cv2.rectangle(frame, (x, y),(x+w, y+h), (0, 255, 0), 2)
 
+        qr_dict=id=lat=lon=None
+        try:
+            qr_dict = literal_eval(barcode_info)
+            id=str(qr_dict['id'])
+            lat=str(qr_dict['lat'])
+            lon=str(qr_dict['lon'])
+        except:
+            id = "QR Tidak dikenal"
+            lat =lon = ""
+            # print("QR tidak dikenal")
+        print(id)
+        print(lat)
+        print(lon)
+
         #2
         font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(frame, barcode_info, (x + 6, y - 6), font, 2.0, (255, 255, 255), 1)
+        cv2.putText(frame, barcode_info, (x + 6, y - 6), font, 0.5, (255, 255, 255), 1)
         #3
         with open("barcode_result.txt", mode ='w') as file:
             file.write("Recognized Barcode:" + barcode_info)

@@ -1,0 +1,1 @@
+Recognized Barcode:{'id': 'GSA', 'lat': -7.077948, 'lon': 110.328252}
