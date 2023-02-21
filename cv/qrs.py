@@ -25,7 +25,6 @@ cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get Tinggi FRAME
 def read_qrcodes(frame):
     verified.x = verified.y = None
     qrCodes = pyzbar.decode(frame)
-    center_dist_x=center_dist_y= None
 
     for qrcode in qrCodes: #UNTUK SETIAP QRCODE YANG ADA DI DALAM FRAME (Looping...)
         pos_x, pos_y , lebar, tinggi = qrcode.rect #posisi qrcode relative terhadap frame
@@ -82,11 +81,6 @@ def init(v=None, id=None):
     print("QR Scanner Start...")
     esc, frame = camera.read()  #Capture Image dari kamera
     
-    # alignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
-    # alignment.daemon = True
-    # alignment.start()
-#    alignment.join()
-
     while esc:
         esc, frame = camera.read()
         frame = cv2.flip(frame,1)
@@ -97,7 +91,7 @@ def init(v=None, id=None):
         cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),font, 0.5, color_white, 1) #resolusi frame
         cv2.imshow('QR Finder!!!', frame)
         
-        if cv2.waitKey(1) and verified.x and verified.y and abs(verified.x)<50 and abs(verified.y)<50:
+        if cv2.waitKey(1) and verified.confirmed:
             break
     
     camera.release()

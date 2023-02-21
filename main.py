@@ -24,6 +24,9 @@ def armMotor():
 
     # We have a home location.
     print ("Home location: %s" % vehicle.home_location)
+    global initialHeading
+    initialHeading = vehicle.heading
+    print ("Initial Heading: %s" %initialHeading)
 
     print("Basic pre-arm checks")
     # Don't try to arm until autopilot is ready
@@ -51,9 +54,9 @@ def takeOff(target_altitude=10):
     #  (otherwise the command after Vehicle.simple_takeoff will execute
     #   immediately).
     while True:
-        print(" Altitude: ", vehicle.location.global_relative_frame.alt)
+        print(" Altitude: %0.2f meter" %vehicle.location.global_relative_frame.alt)
         # Break and return from function just below target altitude.
-        if vehicle.location.global_relative_frame.alt >= target_altitude * 0.95:
+        if vehicle.location.global_relative_frame.alt >= target_altitude:
             print("Reached target altitude")
             break
         time.sleep(1)
@@ -71,35 +74,10 @@ def terbangKe(lokasi_target):
     
     while vehicle.mode.name=="GUIDED": #Berhenti apabila keluar dari mode Guided
         jarak_terkini = getJarak(vehicle.location.global_relative_frame, lokasi_target)
-        print(jarak_terkini)
+        print("%0.2f meter menuju lokasi." %jarak_terkini)
         if jarak_terkini<=jarak_target*0.01:
             print("Sampai di lokasi kakak :)")
             break
-        time.sleep(1)
-
-def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
-                                                            # # Set up velocity mappings
-                                                            # # velocity_x > 0 => fly North
-                                                            # # velocity_x < 0 => fly South
-                                                            # # velocity_y > 0 => fly East
-                                                            # # velocity_y < 0 => fly West
-                                                            # # velocity_z < 0 => ascend
-                                                            # # velocity_z > 0 => descend
-
-    msg = vehicle.message_factory.set_position_target_local_ned_encode(
-        0,       # time_boot_ms (not used)
-        0, 0,    # target system, target component
-        mavutil.mavlink.MAV_FRAME_LOCAL_NED, # frame
-        0b0000111111000111, # type_mask (only speeds enabled)
-        0, 0, 0, # x, y, z positions (not used)
-        velocity_x, velocity_y, velocity_z, # x, y, z velocity in m/s
-        0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
-
-
-    # send command to vehicle on 1 Hz cycle
-    for x in range(0,duration):
-        vehicle.send_mavlink(msg)
         time.sleep(1)
 
 def condition_yaw(heading, relative=False):
@@ -121,14 +99,6 @@ def condition_yaw(heading, relative=False):
     vehicle.send_mavlink(msg)
 
 def set_roi(location):
-    """
-    Send MAV_CMD_DO_SET_ROI message to point camera gimbal at a 
-    specified region of interest (LocationGlobal).
-    The vehicle may also turn to face the ROI.
-
-    For more information see: 
-    http://copter.ardupilot.com/common-mavlink-mission-command-messages-mav_cmd/#mav_cmd_do_set_roi
-    """
     # create the MAV_CMD_DO_SET_ROI command
     msg = vehicle.message_factory.command_long_encode(
         0, 0,    # target system, target component
@@ -141,66 +111,42 @@ def set_roi(location):
         )
     # send command to vehicle
     vehicle.send_mavlink(msg)
-
-def geser(arah):
-    vehicle.channels.overrides['3'] = 1500
-    vehicle.mode = VehicleMode('LOITER')
-
-    time.sleep(1)
-    print("Mode: "+vehicle.mode.name)
-    print("Emulating Joystick Control...")
-    
-    vehicle.channels.overrides['3'] = 1500
-    if arah == 'kanan':
-        vehicle.channels.overrides['1']=vehicle.channels['1']+100
-    if arah == 'kiri':
-        vehicle.channels.overrides['1']=vehicle.channels['1']-100
-    if arah == 'maju':
-        vehicle.channels.overrides['2']=vehicle.channels['2']+100
-    if arah == 'mundur':
-        vehicle.channels.overrides['2']=vehicle.channels['2']-100
-
-    time.sleep(1)
-    # # vehicle.channels.overrides = {'3': 1500, '2': 1700}
-    # print(" Ch1: %s" % vehicle.channels['1'])
-    # print(" Ch2: %s" % vehicle.channels['2'])
-    # print(" Ch3: %s" % vehicle.channels['3'])
-    # print(" Ch4: %s" % vehicle.channels['4'])
-    # print("Number of channels: %s" % len(vehicle.channels))
-    # time.sleep(1)
-
-    vehicle.channels.overrides = {}
-    vehicle.mode = VehicleMode('GUIDED')
     
 def RTL():
     vehicle.mode = VehicleMode('RTL')
     while vehicle.armed:
         jarak = getJarak(vehicle.location.global_relative_frame,vehicle.home_location)
         if jarak<1:
-            print("Descending..."+str(vehicle.location.global_relative_frame.alt))
+            if abs(vehicle.heading-initialHeading)>5:
+                condition_yaw(initialHeading,0)
+            print("Descending... Altitude: %0.2f meter" %vehicle.location.global_relative_frame.alt)
         else:
-            print("  OTW RTL...", jarak ," meter lagi...")
+            print("OTW RTL... %0.2f meter menuju Home..." %jarak)
         time.sleep(1)
     print("RTL Selesai!")
 
-def align(stop):
+def align():
     try:
         print("Mode: "+vehicle.mode.name)
-        mission_passed = False
         vehicle.channels.overrides['3'] = 1500
         vehicle.mode = VehicleMode('LOITER')
         print("Ubah mode ke LOITER")
-        time.sleep(1)
         print("Mode: "+vehicle.mode.name)
         print("Emulating Joystick Control...")
-        while mission_passed is False:
+        while verified.confirmed is False:
+            print(verified.confirmed)
             while verified.x and verified.y:
                 x, y=verified.x , verified.y
                 print(str(x)+','+str(y))
                 if x<50 and x>-50 and y<50 and y>-50:
-                    vehicle.channels.overrides = {}
-                    mission_passed = True
-                    print("Mission Passed!")
+                    # vehicle.channels.overrides = {}
+                    vehicle.mode = VehicleMode('GUIDED')
+                    set_roi(location=vehicle.home_location)
+                    vehicle.channels.overrides['7']=1800
+                    print("Tunggu bentar...")
+                    time.sleep(10)
+                    verified.confirmed=True
+                    print("Misi Selesai!")
                     break
                 elif x>50: #kiri
                     vehicle.channels.overrides['1']=1300
@@ -214,6 +160,7 @@ def align(stop):
                 elif y<-50: #maju
                     vehicle.channels.overrides['2']=1700            
                     print('maju')
+                vehicle.flush()
                 time.sleep(1)
             else:
                 print("Looking for QRCode...")
@@ -221,11 +168,15 @@ def align(stop):
                 vehicle.channels.overrides['3'] = 1500
                 time.sleep(1)
     except:
+        print("ERROR.")
         vehicle.channels.overrides = {}
 
 ################################################# Manggil FUNGSI DI SINI SEMUA YGY (biar rapih)
 
-print("Verifikasi Misi...")
+get_params.getParams(vehicle)
+get_attributes.getAttributes(vehicle)
+
+print("\n\nVerifikasi Misi...")
 identifiedQRDict = qr_target_identifier.main()
 targetLocation = LocationGlobalRelative(float(identifiedQRDict['lat']), float(identifiedQRDict['lon']), 10)
 
@@ -234,77 +185,23 @@ print("Distance to Target: "+str(getJarak(vehicle.location.global_relative_frame
 
 if input("\n\nArm Motors? y/n: ")=="y":
     armMotor()
-    if input("\nTerbang? y/n: ")=="y":
+    if input("\nTake Off? y/n: ")=="y":
         takeOff(10)
-        terbangKe(targetLocation)
-        stopAlignment = False
-        vehicleAlignment = threading.Thread(target=align, args =(lambda : stopAlignment, )) #Threading agar fungsi align dapat berjalan di latar belakang
-        vehicleAlignment.daemon = True
-        vehicleAlignment.start()
-        qrs.init(vehicle, str(identifiedQRDict['id']))
-        stopAlignment = True
-        vehicleAlignment.join()        
-        RTL()
+        if input("\nLanjutkan ke Target? y/n: ")=="y":
+            terbangKe(targetLocation)
+            vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
+            vehicleAlignment.daemon = True
+            vehicleAlignment.start()
+            qrs.init(vehicle, str(identifiedQRDict['id']))
+            vehicleAlignment.join()
+            RTL()
+        else:
+            RTL()
     else:
         vehicle.armed = False
         print("Mission Cancelled.")
 else:
     print("Mission Cancelled.")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# lokasi_target1 = LocationGlobalRelative(-7.077743, 110.328161, 10)
-# lokasi_target2 = LocationGlobalRelative(-7.0774391, 110.3289168, 10)
-# lokasi_target3 = LocationGlobalRelative(-7.069108, 110.366521, 100)
-# get_params.getParams(vehicle)
-# get_attributes.getAttributes(vehicle)
-
-
-# armMotor()
-# takeOff(10)
-# terbangKe(lokasi_target1)
-# terbangKe(lokasi_target2)
-# terbangKe(lokasi_target3)
-
-#qrs.init(vehicle, "GSA")
-
-# geser('kanan')
-# geser('kanan')
-# geser('kanan')
-
-# time.sleep(1000)
-# set_roi(vehicle.location.global_relative_frame)
-# geser(1,0,0,10)
-# geser(0,1,0,10)
-
-
-# terbangKe(lokasi_target2)
 
 # Sequence:
 # 1. Scan QR-Code
@@ -314,10 +211,3 @@ else:
 # 5. IF VERIFIED>Decent Altitude
 # 6. ELSE>RTL
 # 7. RTL
-
-# qr_sign = "Bondan Eka Nugraha"
-# verified = qr_scanner.scanQR(qr_sign)
-
-# print(verified)
-# RTL()
-# vehicle.mode = VehicleMode('STABILIZE')
