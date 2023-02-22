@@ -9,9 +9,9 @@ color_red   = 0,0,255
 color_white = 255,255,255
 color_pink = 153,51,255
 
-camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+camera = cv2.VideoCapture(0)
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
 cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -57,6 +57,7 @@ def main():
 
     ret, frame = camera.read()
     identifiedCounter = 0
+    identifiedQRDict = None
     #2
     while ret:
         ret, frame = camera.read()
