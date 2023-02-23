@@ -3,7 +3,6 @@ import cv2
 from pyzbar import pyzbar
 from ast import literal_eval
 
-
 def read_barcodes(frame):
     barcodes = pyzbar.decode(frame)
     for barcode in barcodes:
@@ -36,15 +35,18 @@ def read_barcodes(frame):
 
 def main():
     #1
-    camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 180)
+    camera = cv2.VideoCapture(0)
+#    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+#    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+    cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     ret, frame = camera.read()
     #2
     while ret:
         ret, frame = camera.read()
         frame = read_barcodes(frame)
+        cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,255,0), 1) #resolusi frame
         cv2.imshow('Barcode/QR code reader', frame)
         if cv2.waitKey(1) & 0xFF == 27:
             break

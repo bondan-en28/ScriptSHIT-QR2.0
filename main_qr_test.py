@@ -5,7 +5,7 @@ import time, math, threading
 import koneksi
 vehicle = koneksi.vehicle
 
-from cv import qr_destination, qr_target_identifier
+from cv import qr_target_identifier, qr_destination
 
 verified = qr_destination.verified
 
@@ -14,6 +14,7 @@ identifiedQRDict = None
 
 while identifiedQRDict is None:
     identifiedQRDict= qr_target_identifier.main()
+    time.sleep(1)
 print(identifiedQRDict)
 
 qr_destination.init(vehicle, str(identifiedQRDict['id']))

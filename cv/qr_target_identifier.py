@@ -3,17 +3,14 @@ import cv2,time
 from pyzbar import pyzbar
 from ast import literal_eval
 
+cam_width = cam_height = 0
+
 font = cv2.FONT_HERSHEY_DUPLEX
 color_green = 0,255,0
 color_red   = 0,0,255
 color_white = 255,255,255
 color_pink = 153,51,255
 
-camera = cv2.VideoCapture(1)
-camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
-cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
-cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 def read_barcodes(frame):
     barcodes = pyzbar.decode(frame)
@@ -55,6 +52,12 @@ def read_barcodes(frame):
     return returnValue
 
 def main():
+    camera = cv2.VideoCapture(1)
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+
+    cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+    cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     ret, frame = camera.read()
     identifiedCounter = 0
@@ -71,7 +74,7 @@ def main():
         cv2.imshow('Target Identifier', frame)
         if cv2.waitKey(1) & identifiedCounter>50:
             break
-    #3
+
     camera.release()
     print("Released Camera.")
     cv2.destroyAllWindows()

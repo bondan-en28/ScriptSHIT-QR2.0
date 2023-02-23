@@ -7,16 +7,12 @@ from cv.Verified import Verified
 
 verified = Verified() #inisiasi Objek Verified sebagai verified
 
+cam_width = cam_height = 0
+
 font = cv2.FONT_HERSHEY_DUPLEX
 color_green = 0,255,0
 color_red   = 0,0,255
 color_white = 255,255,255
-#=======================================================CAMERA SETTINGs
-camera = cv2.VideoCapture(0)                            #Setup Camera Capture
-camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)               #Set Lebar FRAME
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)              #Set Tinggi FRAME
-cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))   #Get Lebar FRAME
-cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get Tinggi FRAME
 
 #=======================================================Fungsi baca QR
 
@@ -72,16 +68,22 @@ def read_qrcodes(frame):
     return frame
 
 def init(v=None, id=None):
+    #=======================================================CAMERA SETTINGs
+    camera = cv2.VideoCapture(1)                            #Setup Camera Capture
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)               #Set Lebar FRAME
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)              #Set Tinggi FRAME
+    cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))   #Get Lebar FRAME
+    cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get Tinggi FRAME
+
     global vehicle              #Inisiasi objek Vehicle sebagai global variable
     vehicle = v                 #Set param v(objek vehicle) dari main.py sebagai vehicle
     verified.id=id              #Set param id(id QR) dari main.py sebagai id pada objek verified
 
     print("QR Scanner Start...")
     esc, frame = camera.read()  #Capture Image dari kamera
-    
+
     while esc:
         esc, frame = camera.read()
-        frame = cv2.flip(frame,1)
         frame = read_qrcodes(frame)
         #x,y koordinat barcode terhadap frame
 
@@ -89,8 +91,10 @@ def init(v=None, id=None):
         cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),font, 0.5, color_white, 1) #resolusi frame
         cv2.imshow('QR Finder!!!', frame)
         
+        print(verified.x,verified.y)
         if cv2.waitKey(1) and verified.confirmed:
             break
     
     camera.release()
+    print("Released Camera.")
     cv2.destroyAllWindows()
