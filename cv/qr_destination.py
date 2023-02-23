@@ -55,23 +55,24 @@ def readQRs(frame):
             verified.x = int(cam_width/2-mid_pos_x) #Jarak QR relative terhadap tengah Frame (sumbu x)
             verified.y = int(cam_height/2-mid_pos_y) #Jarak QR relative terhadap tengah Frame (sumbu y)
 
-            #print(center_dist_x,center_dist_y)
             if abs(verified.x)<50 and abs(verified.y)<50:
                 cv2.putText(frame, "ALIGNMENT>>"+str(mid_pos_x)+", "+str(mid_pos_y), (10, int(cam_height-40)), font, 0.5, color_green, 1)
             else:
                 cv2.putText(frame, "ALIGNMENT>>"+str(mid_pos_x)+", "+str(mid_pos_y), (10, int(cam_height-40)), font, 0.5, color_red, 1)
 
         else:
-            cv2.putText(frame, id+", lat: "+lat+", lon: "+lon, (pos_x + 6, pos_y - 6), font, 0.5, color_red, 1)
+            cv2.putText(frame, qr_data, (pos_x + 6, pos_y - 6), font, 0.5, color_red, 1)
             cv2.rectangle(frame, (pos_x, pos_y),(pos_x+lebar, pos_y+tinggi), color_red, 2)
         
     return frame
 
 def main(v=None, id=None):
     #=======================================================CAMERA SETTINGs
-    camera = cv2.VideoCapture(1)                            #Setup Camera Capture
-    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)               #Set Lebar FRAME
-    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)              #Set Tinggi FRAME
+    camera = cv2.VideoCapture(0)                            #Setup Camera Capture
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)               #Set Lebar FRAME
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)              #Set Tinggi FRAME
+
+    global cam_width, cam_height
     cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))   #Get Lebar FRAME
     cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get Tinggi FRAME
 
@@ -89,9 +90,8 @@ def main(v=None, id=None):
 
         cv2.rectangle(frame, (int(cam_width/2-100),int(cam_height/2-100)), (int(cam_width/2+100),int(cam_height/2+100)), color_green, 2) #garis bantu center camera
         cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),font, 0.5, color_white, 1) #resolusi frame
-        cv2.imshow('QR Finder!!!', frame)
+        cv2.imshow('Target Finder', frame)
         
-        print(verified.x,verified.y)
         if cv2.waitKey(1) and verified.confirmed:
             break
     

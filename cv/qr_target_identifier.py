@@ -52,10 +52,11 @@ def readQRs(frame):
     return returnValue
 
 def main():
-    camera = cv2.VideoCapture(1)
-    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
-
+    camera = cv2.VideoCapture(0)
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640) #320
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) #240
+    
+    global cam_width, cam_height
     cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
     cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
