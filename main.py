@@ -193,9 +193,7 @@ print("\nTarget Location: "+str(target_location))
 distance_to_target= getJarak(vehicle.location.global_relative_frame,target_location)
 print("Distance to Target: %0.2f meter" %distance_to_target)
 
-if distance_to_target>100.0:
-    mission_valid = False
-else:
+if distance_to_target<100.0:
     mission_valid=True
 
 if mission_valid:

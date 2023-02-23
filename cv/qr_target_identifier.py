@@ -13,6 +13,8 @@ color_pink = 153,51,255
 
 
 def readQRs(frame):
+#    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
     qr_codes = pyzbar.decode(frame)
     recognized_qr_count = 0
     identified_qr_dict= recognized_qr_dict = None
