@@ -2,7 +2,6 @@
 import cv2,time
 from pyzbar import pyzbar
 from ast import literal_eval
-cv2.__version__
 
 font = cv2.FONT_HERSHEY_DUPLEX
 color_green = 0,255,0
@@ -12,7 +11,7 @@ color_pink = 153,51,255
 
 camera = cv2.VideoCapture(1)
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 180)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
 cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
 

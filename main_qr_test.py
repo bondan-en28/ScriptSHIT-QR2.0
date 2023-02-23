@@ -2,20 +2,21 @@ from __future__ import print_function
 import time, math, threading
 # Dronekit Import
 
-from cv import qrs, qr_target_identifier
+import koneksi
+vehicle = koneksi.vehicle
 
-verified = qrs.verified
+from cv import qr_destination, qr_target_identifier
+
+verified = qr_destination.verified
 
 print("\n\nVerifikasi Misi...")
 identifiedQRDict = None
-#qr_target_identifier.main()
-#print(identifiedQRDict)
 
 while identifiedQRDict is None:
     identifiedQRDict= qr_target_identifier.main()
-
 print(identifiedQRDict)
 
+qr_destination.init(vehicle, str(identifiedQRDict['id']))
 
 #qrs.init(vehicle=None, str(identifiedQRDict['id']))
 

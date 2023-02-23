@@ -4,8 +4,6 @@ from pyzbar import pyzbar
 from ast import literal_eval
 
 from cv.Verified import Verified
-# from Verified import Verified
-# from multiprocessing import Process
 
 verified = Verified() #inisiasi Objek Verified sebagai verified
 
@@ -15,8 +13,8 @@ color_red   = 0,0,255
 color_white = 255,255,255
 #=======================================================CAMERA SETTINGs
 camera = cv2.VideoCapture(0)                            #Setup Camera Capture
-camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)               #Set Lebar FRAME
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)              #Set Tinggi FRAME
+camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)               #Set Lebar FRAME
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)              #Set Tinggi FRAME
 cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))   #Get Lebar FRAME
 cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get Tinggi FRAME
 

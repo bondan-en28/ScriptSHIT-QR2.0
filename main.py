@@ -6,9 +6,9 @@ from pymavlink import mavutil # Needed for command message definitions
 
 # Local Import
 import koneksi, get_attributes, get_params
-from cv import qrs, qr_target_identifier
+from cv import qr_destination, qr_target_identifier
 
-verified = qrs.verified
+verified = qr_destination.verified
 vehicle = koneksi.vehicle
 
 def armMotor():
@@ -208,7 +208,7 @@ if missionValid:
                 vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
                 vehicleAlignment.daemon = True
                 vehicleAlignment.start()
-                qrs.init(vehicle, str(identifiedQRDict['id']))
+                qr_destination.init(vehicle, str(identifiedQRDict['id']))
                 vehicleAlignment.join()
                 RTL()
             else:
