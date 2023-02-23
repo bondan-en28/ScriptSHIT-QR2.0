@@ -177,38 +177,38 @@ def align():
 #get_attributes.getAttributes(vehicle)
 
 print("\n\nVerifikasi Misi...")
-identifiedQRDict = None
-missionValid = False
+identified_qr_dict = None
+mission_valid = False
 
-while identifiedQRDict is None:
-    identifiedQRDict= qr_target_identifier.main()
+while identified_qr_dict is None:
+    identified_qr_dict= qr_target_identifier.main()
 
-targetLat = float(identifiedQRDict['lat'])
-targetLon = float(identifiedQRDict['lon'])
-targetAlt = 10
+target_lat = float(identified_qr_dict['lat'])
+target_lon = float(identified_qr_dict['lon'])
+target_alt = 10
 
-targetLocation = LocationGlobalRelative(targetLat, targetLon, targetAlt)
+target_location = LocationGlobalRelative(target_lat, target_lon, target_alt)
 
-print("\nTarget Location: "+str(targetLocation))
-distanceToTarget= getJarak(vehicle.location.global_relative_frame,targetLocation)
-print("Distance to Target: %0.2f meter" %distanceToTarget)
+print("\nTarget Location: "+str(target_location))
+distance_to_target= getJarak(vehicle.location.global_relative_frame,target_location)
+print("Distance to Target: %0.2f meter" %distance_to_target)
 
-if distanceToTarget>100.0:
-    missionValid = False
+if distance_to_target>100.0:
+    mission_valid = False
 else:
-    missionValid=True
+    mission_valid=True
 
-if missionValid:
+if mission_valid:
     if input("\n\nArm Motors? y/n: ")=="y":
         armMotor()
         if input("\nTake Off? y/n: ")=="y":
             takeOff(10)
             if input("\nLanjutkan ke Target? y/n: ")=="y":
-                terbangKe(targetLocation)
+                terbangKe(target_location)
                 vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
                 vehicleAlignment.daemon = True
                 vehicleAlignment.start()
-                qr_destination.init(vehicle, str(identifiedQRDict['id']))
+                qr_destination.main(vehicle, str(identified_qr_dict['id']))
                 vehicleAlignment.join()
                 RTL()
             else:

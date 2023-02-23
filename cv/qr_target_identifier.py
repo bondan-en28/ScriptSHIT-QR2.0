@@ -1,5 +1,5 @@
 #import libraries
-import cv2,time
+import cv2
 from pyzbar import pyzbar
 from ast import literal_eval
 
@@ -12,19 +12,19 @@ color_white = 255,255,255
 color_pink = 153,51,255
 
 
-def read_barcodes(frame):
-    barcodes = pyzbar.decode(frame)
-    recognizedQRCount = 0
-    identifiedQRDict= recognizedQRDict = None
+def readQRs(frame):
+    qr_codes = pyzbar.decode(frame)
+    recognized_qr_qount = 0
+    identified_qr_dict= recognized_qr_dict = None
 
-    for barcode in barcodes: #UNTUK SETIAP QRCODE YANG ADA DI DALAM FRAME
-        x, y , w, h = barcode.rect #KOORDINAT UNTUK SETIAP SATU QRCODE
+    for qr_code in qr_codes: #UNTUK SETIAP QRCODE YANG ADA DI DALAM FRAME
+        x, y , w, h = qr_code.rect #KOORDINAT UNTUK SETIAP SATU QRCODE
 
-        barcode_info = barcode.data.decode('utf-8') #DECODE DATA YANG ADA DI DALAM QRCODE
-
+        qr_data = qr_code.data.decode('utf-8') #DECODE DATA YANG ADA DI DALAM QRCODE
         qr_dict=id=lat=lon=None #INISIASI ID, LAT, LON, KE NULL SEBELUM DICOBA DITERJEMAHKAN
+
         try: #MENCOBA MENGUBAH DATA MENJADI PYTHON DICTIONARY
-            qr_dict = literal_eval(barcode_info)
+            qr_dict = literal_eval(qr_data)
             id=str(qr_dict['id'])
             lat=str(qr_dict['lat'])
             lon=str(qr_dict['lon'])
@@ -33,22 +33,22 @@ def read_barcodes(frame):
         
         if id and lat and lon is not None:
             cv2.rectangle(frame, (x, y),(x+w, y+h), color_green, 2)
-            recognizedQRDict = qr_dict
-            recognizedQRCount+=1
+            recognized_qr_dict = qr_dict
+            recognized_qr_qount+=1
         else:
             cv2.rectangle(frame, (x, y),(x+w, y+h), color_red, 2)
 
-        cv2.putText(frame, barcode_info, (x + 6, y - 6), font, 0.5, color_pink, 1)
+        cv2.putText(frame, qr_data, (x + 6, y - 6), font, 0.5, color_pink, 1)
     
-    if recognizedQRCount<1:
+    if recognized_qr_qount<1:
         cv2.putText(frame, "Waiting for QR...", (10, int(cam_height-20)), font, 0.5, color_green, 1)
-    if recognizedQRCount==1:
-        cv2.putText(frame, "QR Identified>>"+str(recognizedQRDict['id']), (10, int(cam_height-20)), font, 0.5, color_green, 1)
-        identifiedQRDict = recognizedQRDict
-    elif recognizedQRCount>1:
+    if recognized_qr_qount==1:
+        cv2.putText(frame, "QR Identified>>"+str(recognized_qr_dict['id']), (10, int(cam_height-20)), font, 0.5, color_green, 1)
+        identified_qr_dict = recognized_qr_dict
+    elif recognized_qr_qount>1:
         cv2.putText(frame, "Multiple QR's Detected, It's CONFUSING!", (10, int(cam_height-20)), font, 0.5, color_green, 1)
 
-    returnValue = [frame, identifiedQRDict]
+    returnValue = [frame, identified_qr_dict]
     return returnValue
 
 def main():
@@ -66,7 +66,7 @@ def main():
 
     while ret:
         ret, frame = camera.read()
-        frame, identifiedQRDict= read_barcodes(frame)
+        frame, identifiedQRDict= readQRs(frame)
         if identifiedQRDict is not None:
             identifiedCounter+=1
             cv2.line(frame, (0, int(cam_height-5)), (int(identifiedCounter/50*cam_width) , int(cam_height-5)), color_green, 3)

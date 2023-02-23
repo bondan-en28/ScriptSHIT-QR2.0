@@ -10,14 +10,14 @@ from cv import qr_target_identifier, qr_destination
 verified = qr_destination.verified
 
 print("\n\nVerifikasi Misi...")
-identifiedQRDict = None
+identified_qr_dict = None
 
-while identifiedQRDict is None:
-    identifiedQRDict= qr_target_identifier.main()
+while identified_qr_dict is None:
+    identified_qr_dict= qr_target_identifier.main()
     time.sleep(1)
-print(identifiedQRDict)
+print(identified_qr_dict)
 
-qr_destination.init(vehicle, str(identifiedQRDict['id']))
+qr_destination.main(vehicle, str(identified_qr_dict['id']))
 
 #qrs.init(vehicle=None, str(identifiedQRDict['id']))
 

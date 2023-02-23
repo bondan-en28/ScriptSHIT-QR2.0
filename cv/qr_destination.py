@@ -1,5 +1,5 @@
 #import libraries
-import cv2, time, threading
+import cv2
 from pyzbar import pyzbar
 from ast import literal_eval
 
@@ -16,21 +16,21 @@ color_white = 255,255,255
 
 #=======================================================Fungsi baca QR
 
-def read_qrcodes(frame):
+def readQRs(frame):
     verified.x = verified.y = None
-    qrCodes = pyzbar.decode(frame)
+    qr_codes = pyzbar.decode(frame)
 
-    for qrcode in qrCodes: #UNTUK SETIAP QRCODE YANG ADA DI DALAM FRAME (Looping...)
-        pos_x, pos_y , lebar, tinggi = qrcode.rect #posisi qrcode relative terhadap frame
+    for qr_code in qr_codes: #UNTUK SETIAP QRCODE YANG ADA DI DALAM FRAME (Looping...)
+        pos_x, pos_y , lebar, tinggi = qr_code.rect #posisi qrcode relative terhadap frame
 
         #Hitung posisi tengah QR
         mid_pos_x = int(pos_x+(lebar/2))
         mid_pos_y = int(pos_y+(tinggi/2))
 
-        qrcode_data = qrcode.data.decode('utf-8')
+        qr_data = qr_code.data.decode('utf-8')
         qr_dict=id=lat=lon=None
         try:
-            qr_dict = literal_eval(qrcode_data) #Menerjemahkan data QR sebagai Python Dictionary
+            qr_dict = literal_eval(qr_data) #Menerjemahkan data QR sebagai Python Dictionary
             id=str(qr_dict['id'])
             lat=str(qr_dict['lat'])
             lon=str(qr_dict['lon'])
@@ -67,7 +67,7 @@ def read_qrcodes(frame):
         
     return frame
 
-def init(v=None, id=None):
+def main(v=None, id=None):
     #=======================================================CAMERA SETTINGs
     camera = cv2.VideoCapture(1)                            #Setup Camera Capture
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)               #Set Lebar FRAME
@@ -80,12 +80,12 @@ def init(v=None, id=None):
     verified.id=id              #Set param id(id QR) dari main.py sebagai id pada objek verified
 
     print("QR Scanner Start...")
-    esc, frame = camera.read()  #Capture Image dari kamera
+    ret, frame = camera.read()  #Capture Image dari kamera
 
-    while esc:
-        esc, frame = camera.read()
-        frame = read_qrcodes(frame)
-        #x,y koordinat barcode terhadap frame
+    while ret:
+        ret, frame = camera.read()
+        frame = readQRs(frame)
+        #x,y koordinat qrcode terhadap frame
 
         cv2.rectangle(frame, (int(cam_width/2-100),int(cam_height/2-100)), (int(cam_width/2+100),int(cam_height/2+100)), color_green, 2) #garis bantu center camera
         cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),font, 0.5, color_white, 1) #resolusi frame
