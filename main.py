@@ -173,36 +173,53 @@ def align():
 
 ################################################# Manggil FUNGSI DI SINI SEMUA YGY (biar rapih)
 
-get_params.getParams(vehicle)
-get_attributes.getAttributes(vehicle)
+#get_params.getParams(vehicle)
+#get_attributes.getAttributes(vehicle)
 
 print("\n\nVerifikasi Misi...")
-identifiedQRDict = qr_target_identifier.main()
-targetLocation = LocationGlobalRelative(float(identifiedQRDict['lat']), float(identifiedQRDict['lon']), 10)
+identifiedQRDict = None
+missionValid = False
+
+while identifiedQRDict is None:
+    identifiedQRDict= qr_target_identifier.main()
+
+targetLat = float(identifiedQRDict['lat'])
+targetLon = float(identifiedQRDict['lon'])
+targetAlt = 10
+
+targetLocation = LocationGlobalRelative(targetLat, targetLon, targetAlt)
 
 print("\nTarget Location: "+str(targetLocation))
-print("Distance to Target: "+str(getJarak(vehicle.location.global_relative_frame,targetLocation)))
+distanceToTarget= getJarak(vehicle.location.global_relative_frame,targetLocation)
+print("Distance to Target: %0.2f meter" %distanceToTarget)
 
-if input("\n\nArm Motors? y/n: ")=="y":
-    armMotor()
-    if input("\nTake Off? y/n: ")=="y":
-        takeOff(10)
-        if input("\nLanjutkan ke Target? y/n: ")=="y":
-            terbangKe(targetLocation)
-            vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
-            vehicleAlignment.daemon = True
-            vehicleAlignment.start()
-            qrs.init(vehicle, str(identifiedQRDict['id']))
-            vehicleAlignment.join()
-            RTL()
+if distanceToTarget>100.0:
+    missionValid = False
+else:
+    missionValid=True
+
+if missionValid:
+    if input("\n\nArm Motors? y/n: ")=="y":
+        armMotor()
+        if input("\nTake Off? y/n: ")=="y":
+            takeOff(10)
+            if input("\nLanjutkan ke Target? y/n: ")=="y":
+                terbangKe(targetLocation)
+                vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
+                vehicleAlignment.daemon = True
+                vehicleAlignment.start()
+                qrs.init(vehicle, str(identifiedQRDict['id']))
+                vehicleAlignment.join()
+                RTL()
+            else:
+                RTL()
         else:
-            RTL()
+            vehicle.armed = False
+            print("Mission Cancelled.")
     else:
-        vehicle.armed = False
         print("Mission Cancelled.")
 else:
-    print("Mission Cancelled.")
-
+    print("Too Far... Mission Impossible.")
 # Sequence:
 # 1. Scan QR-Code
 # 2. Verifying QR-Code

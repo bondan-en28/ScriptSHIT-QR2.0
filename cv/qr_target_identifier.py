@@ -2,6 +2,7 @@
 import cv2,time
 from pyzbar import pyzbar
 from ast import literal_eval
+cv2.__version__
 
 font = cv2.FONT_HERSHEY_DUPLEX
 color_green = 0,255,0
@@ -9,9 +10,9 @@ color_red   = 0,0,255
 color_white = 255,255,255
 color_pink = 153,51,255
 
-camera = cv2.VideoCapture(0)
-camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+camera = cv2.VideoCapture(1)
+camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 180)
 cam_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
 cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -51,29 +52,28 @@ def read_barcodes(frame):
     elif recognizedQRCount>1:
         cv2.putText(frame, "Multiple QR's Detected, It's CONFUSING!", (10, int(cam_height-20)), font, 0.5, color_green, 1)
 
-    return frame, identifiedQRDict
+    returnValue = [frame, identifiedQRDict]
+    return returnValue
 
 def main():
 
     ret, frame = camera.read()
     identifiedCounter = 0
     identifiedQRDict = None
-    #2
+    print("Here main function @qr_target_identifier.py")
+
     while ret:
         ret, frame = camera.read()
-        frame = cv2.flip(frame,1)
         frame, identifiedQRDict= read_barcodes(frame)
         if identifiedQRDict is not None:
             identifiedCounter+=1
             cv2.line(frame, (0, int(cam_height-5)), (int(identifiedCounter/50*cam_width) , int(cam_height-5)), color_green, 3)
         cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),font, 0.5, color_green, 1) #resolusi frame
         cv2.imshow('Target Identifier', frame)
-        if cv2.waitKey(1) & 0xFF == 27 or identifiedCounter>50:
+        if cv2.waitKey(1) & identifiedCounter>50:
             break
     #3
     camera.release()
+    print("Released Camera.")
     cv2.destroyAllWindows()
     return identifiedQRDict
-#4
-if __name__ == '__main__':
-    print(main())
