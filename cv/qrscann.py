@@ -42,9 +42,15 @@ def main():
     cam_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     ret, frame = camera.read()
+
+    alpha = 1     #KONTRAS
+    beta = -50       #BRIGHTNESS
+
     #2
     while ret:
         ret, frame = camera.read()
+        frame = cv2.convertScaleAbs(frame, alpha=alpha, beta=beta)
+
         frame = read_barcodes(frame)
         cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,255,0), 1) #resolusi frame
         cv2.imshow('Barcode/QR code reader', frame)

@@ -82,9 +82,13 @@ def main(v=None, id=None):
 
     print("QR Scanner Start...")
     ret, frame = camera.read()  #Capture Image dari kamera
+    alpha = 1     #KONTRAS
+    beta = -50       #BRIGHTNESS
 
     while ret:
         ret, frame = camera.read()
+        frame = cv2.convertScaleAbs(frame, alpha=alpha, beta=beta)
+                
         frame = readQRs(frame)
         #x,y koordinat qrcode terhadap frame
 

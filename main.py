@@ -19,6 +19,7 @@ def armMotor():
         cmds = vehicle.commands
         cmds.download()
         cmds.wait_ready()
+        print(vehicle.home_location)
         if not vehicle.home_location:
             print(" Waiting for home location ...")
 
@@ -171,21 +172,30 @@ def align():
         print("ERROR.")
         vehicle.channels.overrides = {}
 
+def buka_payload(closed=False):
+    if closed:
+        vehicle.channels.overrides['7'] = 2000
+    else:
+        vehicle.channels.overrides['7'] = 1500
+        
 ################################################# Manggil FUNGSI DI SINI SEMUA YGY (biar rapih)
 
-#get_params.getParams(vehicle)
-#get_attributes.getAttributes(vehicle)
+get_params.getParams(vehicle)
+get_attributes.getAttributes(vehicle)
 
+buka_payload(True)
 print("\n\nVerifikasi Misi...")
 identified_qr_dict = None
 mission_valid = False
 
-while identified_qr_dict is None:
-    identified_qr_dict= qr_target_identifier.main()
+#while identified_qr_dict is None:
+#    identified_qr_dict= qr_target_identifier.main()
 
-target_lat = float(identified_qr_dict['lat'])
-target_lon = float(identified_qr_dict['lon'])
-target_alt = 10
+#target_lat = float(identified_qr_dict['lat'])
+#target_lon = float(identified_qr_dict['lon'])
+target_lat = -6.9673258
+target_lon = 109.7997468
+target_alt = 15
 
 target_location = LocationGlobalRelative(target_lat, target_lon, target_alt)
 
@@ -200,17 +210,17 @@ if mission_valid:
     if input("\n\nArm Motors? y/n: ")=="y":
         armMotor()
         if input("\nTake Off? y/n: ")=="y":
-            takeOff(10)
-            if input("\nLanjutkan ke Target? y/n: ")=="y":
-                terbangKe(target_location)
-                vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
-                vehicleAlignment.daemon = True
-                vehicleAlignment.start()
-                qr_destination.main(vehicle, str(identified_qr_dict['id']))
-                vehicleAlignment.join()
-                RTL()
-            else:
-                RTL()
+            takeOff(target_alt)
+            time.sleep(5)
+            terbangKe(target_location)
+            time.sleep(5)
+#                vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
+#                vehicleAlignment.daemon = True
+#                vehicleAlignment.start()
+#            qr_destination.main(vehicle, str(identified_qr_dict['id']))
+            qr_destination.main(vehicle, "GSA")
+#                vehicleAlignment.join()
+            RTL()
         else:
             vehicle.armed = False
             print("Mission Cancelled.")

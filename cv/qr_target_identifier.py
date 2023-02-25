@@ -72,7 +72,7 @@ def main():
         frame, identified_qr_dict= readQRs(frame)
         if identified_qr_dict is not None:
             identified_counter+=1
-            cv2.line(frame, (0, int(cam_height-5)), (int(identified_counter/50*cam_width) , int(cam_height-5)), color_green, 3)
+            cv2.line(frame, (0,5), (int(identified_counter/50*cam_width) , 5), color_green, 3)
         cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),font, 0.5, color_green, 1) #resolusi frame
         cv2.imshow('Target Identifier', frame)
         if cv2.waitKey(1) & identified_counter>50:
