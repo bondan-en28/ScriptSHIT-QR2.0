@@ -49,7 +49,7 @@ def armMotor():
 
 def takeOff(target_altitude=10):
     print("Taking off!")
-    vehicle.simple_takeoff(target_altitude)  # Take off to target altitude
+    vehicle.simple_takeoff(target_altitude) # Take off to target altitude
 
     # Wait until the vehicle reaches a safe height before processing the goto
     #  (otherwise the command after Vehicle.simple_takeoff will execute
@@ -62,21 +62,40 @@ def takeOff(target_altitude=10):
             break
         time.sleep(1)
 
-def getJarak(lokasi_terkini, lokasi_target):
-    dlat = lokasi_terkini.lat - lokasi_target.lat
-    dlong = lokasi_terkini.lon - lokasi_target.lon
-    return math.sqrt((dlat*dlat) + (dlong*dlong)) * 1.113195e5
+def getJarak(lok_a, lok_b):
+    #Radius bumi(meter)
+    R = 6371000 
+
+    lat_a = lok_a.lat
+    lon_a = lok_a.lon
+    lat_b = lok_b.lat
+    lon_b = lok_b.lon
+
+    # konversi koordinat ke radian
+    rad_lat_a = math.radians(lat_a)
+    rad_lon_a = math.radians(lon_a)
+    rad_lat_b = math.radians(lat_b)
+    rad_lon_b = math.radians(lon_b)
+    
+    # selisih kedua koordinat
+    dlat = rad_lat_b - rad_lat_a
+    dlon = rad_lon_b - rad_lon_a
+
+    # Haversine Formula
+    a = math.sin(dlat/2)**2 + math.cos(rad_lat_a)*math.cos(rad_lat_b)*math.sin(dlon/2)**2
+    c = 2*math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = R*c
+    
+    return d
 
 def terbangKe(lokasi_target):
     print("Menuju : ", lokasi_target)
-    lokasi_terkini = vehicle.location.global_relative_frame
-    jarak_target = getJarak(lokasi_terkini, lokasi_target)
     vehicle.simple_goto(lokasi_target)
     
     while vehicle.mode.name=="GUIDED": #Berhenti apabila keluar dari mode Guided
         jarak_terkini = getJarak(vehicle.location.global_relative_frame, lokasi_target)
         print("%0.2f meter menuju lokasi." %jarak_terkini)
-        if jarak_terkini<=jarak_target*0.01:
+        if jarak_terkini<=1:
             print("Sampai di lokasi kakak :)")
             break
         time.sleep(1)
@@ -188,13 +207,17 @@ print("\n\nVerifikasi Misi...")
 identified_qr_dict = None
 mission_valid = False
 
-#while identified_qr_dict is None:
-#    identified_qr_dict= qr_target_identifier.main()
+while identified_qr_dict is None:
+   identified_qr_dict= qr_target_identifier.main()
 
-#target_lat = float(identified_qr_dict['lat'])
-#target_lon = float(identified_qr_dict['lon'])
-target_lat = -6.9673258
-target_lon = 109.7997468
+target_lat = float(identified_qr_dict['lat'])
+target_lon = float(identified_qr_dict['lon'])
+# target_lat = -6.9673258
+# target_lon = 109.7997468
+# target_alt = 15
+
+# target_lat = -6.9157303
+# target_lon = 109.7905478
 target_alt = 15
 
 target_location = LocationGlobalRelative(target_lat, target_lon, target_alt)
@@ -213,13 +236,11 @@ if mission_valid:
             takeOff(target_alt)
             time.sleep(5)
             terbangKe(target_location)
-            time.sleep(5)
-#                vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
-#                vehicleAlignment.daemon = True
-#                vehicleAlignment.start()
-#            qr_destination.main(vehicle, str(identified_qr_dict['id']))
+            vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
+            vehicleAlignment.daemon = True
+            vehicleAlignment.start()
+            qr_destination.main(vehicle, str(identified_qr_dict['id']))
             qr_destination.main(vehicle, "GSA")
-#                vehicleAlignment.join()
             RTL()
         else:
             vehicle.armed = False
