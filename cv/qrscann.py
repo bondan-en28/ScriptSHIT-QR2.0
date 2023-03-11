@@ -43,13 +43,13 @@ def main():
 
     ret, frame = camera.read()
 
-    alpha = 1     #KONTRAS
+    alpha = 0.5     #KONTRAS
     beta = -50       #BRIGHTNESS
 
     #2
     while ret:
         ret, frame = camera.read()
-        frame = cv2.convertScaleAbs(frame, alpha=alpha, beta=beta)
+#        frame = cv2.convertScaleAbs(frame, alpha=alpha, beta=beta)
 
         frame = read_barcodes(frame)
         cv2.putText(frame, "Frame: "+ str(cam_width)+"x" + str(cam_height),(10,20),cv2.FONT_HERSHEY_DUPLEX, 0.5, (0,255,0), 1) #resolusi frame

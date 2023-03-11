@@ -164,7 +164,7 @@ def align():
                     set_roi(location=vehicle.home_location)
                     vehicle.channels.overrides['7']=1800
                     print("Tunggu bentar...")
-                    time.sleep(1)
+                    time.sleep(10)
                     verified.confirmed=True
                     print("Misi Selesai!")
                     break
@@ -181,7 +181,7 @@ def align():
                     vehicle.channels.overrides['2']=1700            
                     print('maju')
                 vehicle.flush()
-                time.sleep(2)
+                time.sleep(1)
             else:
                 print("Looking for QRCode...")
                 vehicle.channels.overrides = {}
@@ -190,7 +190,25 @@ def align():
     except:
         print("ERROR.")
         vehicle.channels.overrides = {}
+def align_test():
+    try:
+        print("Mode: "+vehicle.mode.name)
         vehicle.channels.overrides['3'] = 1500
+        vehicle.mode = VehicleMode('LOITER')
+        print("Ubah mode ke LOITER")
+        time.sleep(1)
+        print("Mode: "+vehicle.mode.name)
+        print("Emulating Joystick Control...")
+        vehicle.channels.overrides['1']=1300
+        time.sleep(3)
+        vehicle.channels.overrides['1']=1700
+        time.sleep(3)
+        vehicle.channels.overrides = {}
+        vehicle.channels.overrides['3'] = 1500
+
+    except:
+        print("ERROR.")
+        vehicle.channels.overrides = {}
 
 def buka_payload(closed=False):
     if closed:
@@ -203,52 +221,20 @@ def buka_payload(closed=False):
 get_params.getParams(vehicle)
 get_attributes.getAttributes(vehicle)
 
-buka_payload(True)
-print("\n\nVerifikasi Misi...")
-identified_qr_dict = None
-mission_valid = False
+if input("\n\nArm Motors? y/n: ")=="y":
+    buka_payload(True)
+    armMotor()
+    takeOff(2)
+    vehicleAlignment = threading.Thread(target=align_test) #Threading agar fungsi align dapat berjalan di latar belakang
+    vehicleAlignment.daemon = True
+    vehicleAlignment.start()
+    buka_payload(False)
+#            qr_destination.main(vehicle, str(identified_qr_dict['id']))
+    qr_destination.main(vehicle, "GSA")
+#            time.sleep(5)
 
-#while identified_qr_dict is None:
-#   identified_qr_dict= qr_target_identifier.main()
-identified_qr_dict = {'id': 'GSA',
-        'lat':-7.0779435, 
-        'lon':110.3282787}
-target_id = str(identified_qr_dict['id'])
-target_lat = float(identified_qr_dict['lat'])
-target_lon = float(identified_qr_dict['lon'])
-target_alt = 15
+RTL()
 
-print(target_id, target_lat, target_lon)
-
-target_location = LocationGlobalRelative(target_lat, target_lon, target_alt)
-
-print("\nTarget Location: "+str(target_location))
-distance_to_target= getJarak(vehicle.location.global_relative_frame,target_location)
-print("Distance to Target: %0.2f meter" %distance_to_target)
-
-if distance_to_target<100.0:
-    mission_valid=True
-mission_valid=True
-
-if mission_valid:
-    if input("\n\nArm Motors? y/n: ")=="y":
-        armMotor()
-        if input("\nTake Off? y/n: ")=="y":
-            takeOff(target_alt)
-            terbangKe(target_location)
-#            vehicleAlignment = threading.Thread(target=align) #Threading agar fungsi align dapat berjalan di latar belakang
-#            vehicleAlignment.daemon = True
-#            vehicleAlignment.start()
-            qr_destination.main(vehicle, str(identified_qr_dict['id']))
-            time.sleep(5)
-            RTL()
-        else:
-            vehicle.armed = False
-            print("Mission Cancelled.")
-    else:
-        print("Mission Cancelled.")
-else:
-    print("Too Far... Mission Impossible.")
 # Sequence:
 # 1. Scan QR-Code
 # 2. Verifying QR-Code
