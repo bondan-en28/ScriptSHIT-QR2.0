@@ -151,11 +151,12 @@ def align():
         vehicle.channels.overrides['3'] = 1500
         vehicle.mode = VehicleMode('LOITER')
         print("Ubah mode ke LOITER")
+        time.sleep(1)
         print("Mode: "+vehicle.mode.name)
         print("Emulating Joystick Control...")
         while verified.confirmed is False:
             print(verified.confirmed)
-            while verified.x and verified.y:
+            if verified.x and verified.y:
                 x, y=verified.x , verified.y
                 print(str(x)+','+str(y))
                 if x<50 and x>-50 and y<50 and y>-50:
@@ -192,7 +193,7 @@ def align():
         vehicle.channels.overrides = {}
         vehicle.channels.overrides['3'] = 1500
 
-def buka_payload(closed=False):
+def payload_release(closed=False):
     if closed:
         vehicle.channels.overrides['7'] = 2000
     else:
@@ -203,7 +204,7 @@ def buka_payload(closed=False):
 get_params.getParams(vehicle)
 get_attributes.getAttributes(vehicle)
 
-buka_payload(True)
+payload_release(True)
 print("\n\nVerifikasi Misi...")
 identified_qr_dict = None
 mission_valid = False
@@ -213,6 +214,7 @@ mission_valid = False
 identified_qr_dict = {'id': 'GSA',
         'lat':-7.0779435, 
         'lon':110.3282787}
+
 target_id = str(identified_qr_dict['id'])
 target_lat = float(identified_qr_dict['lat'])
 target_lon = float(identified_qr_dict['lon'])
@@ -228,7 +230,6 @@ print("Distance to Target: %0.2f meter" %distance_to_target)
 
 if distance_to_target<100.0:
     mission_valid=True
-mission_valid=True
 
 if mission_valid:
     if input("\n\nArm Motors? y/n: ")=="y":
